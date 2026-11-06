@@ -16,6 +16,7 @@ import PayModal, {
   checkOrderStatus,
   finalizePaidOrder,
   isDailyFreeEnabled,
+  isPaywallEnabled,
   type PendingOrder,
 } from "./PayModal";
 import { getAndClearPendingDownloadUrl } from "@/lib/download-storage";
@@ -287,10 +288,12 @@ export default function FlipDownloaderClient({
         updateTask(taskId, { status: "loading", errorMessage: undefined });
       }
 
-      // 付费墙：周卡有效 → 直接放行；否则看单书授权与每日免费额度。
+      // 付费墙总开关：PAYWALL_ENABLE 未开启（默认）时不拦截，任何链接直接下载。
+      // 开启后：周卡有效 → 直接放行；否则看单书授权与每日免费额度。
       // 服务端 FREE_ONCE_EVERYDAY=false 时取消每日免费额度，未解锁文件一律弹窗。
       // 服务端 PAYMENT_ENABLE=false 时弹窗只保留免费券兑换（暂时只能走 Discord / X 领码）。
-      if (!hasActiveWeeklyPass()) {
+      const paywallOn = await isPaywallEnabled();
+      if (paywallOn && !hasActiveWeeklyPass()) {
         const bookKey = `${ids.id1}_${ids.id2}`;
         const licensed = await paymentDB.hasLicense(bookKey);
         const freeOk =

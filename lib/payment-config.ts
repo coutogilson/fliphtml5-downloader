@@ -23,6 +23,13 @@ export function isDailyFreeEnabled(): boolean {
     return process.env.FREE_ONCE_EVERYDAY !== "false";
 }
 
+// PAYWALL_ENABLE=true 时才启用下载付费墙（单本授权 / 周卡 / 每日免费额度）。
+// 不设置或其他值 = 关闭：任何下载直接放行，弹窗不会打开，支付 API 保留但不再被调用，
+// 需要恢复收费时把该变量设为 true 即可，无需改代码。
+export function isPaywallEnabled(): boolean {
+    return process.env.PAYWALL_ENABLE === "true";
+}
+
 // FREE_CODE_ENABLE=false 时前端不再展示免费券兑换入口（Discord / X 码）；
 // 只隐藏 UI，/api/discord/redeem 接口本身仍然可用。
 export function isFreeCodeEnabled(): boolean {
@@ -48,6 +55,7 @@ export function getPublicPrices() {
         single: getAmountCents("single"),
         week: getAmountCents("week"),
         debug: isPayDebug(),
+        paywall: isPaywallEnabled(),
         dailyFree: isDailyFreeEnabled(),
         freeCode: isFreeCodeEnabled(),
         payment: isPaymentEnabled(),

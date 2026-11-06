@@ -29,6 +29,8 @@ interface PriceConfig {
     freeCode: boolean;
     /** 服务端 PAYMENT_ENABLE 开关，false = 关闭支付入口（仅保留免费券） */
     payment: boolean;
+    /** 服务端 PAYWALL_ENABLE 开关，true = 启用下载付费墙；默认 false（全部放行） */
+    paywall: boolean;
     /** 周卡天数（每次激活/支付写入的天数），与兑换服务端同源 */
     weekDays: number;
     /** 每张码可用次数 */
@@ -46,6 +48,7 @@ const DEFAULT_PRICES: PriceConfig = {
     dailyFree: true,
     freeCode: true,
     payment: true,
+    paywall: false,
     weekDays: 7,
     passMaxUses: 5,
     passBatchSize: 10,
@@ -76,6 +79,13 @@ export function loadPaymentConfig(): Promise<PriceConfig> {
 export async function isDailyFreeEnabled(): Promise<boolean> {
     const cfg = await loadPaymentConfig();
     return cfg.dailyFree !== false;
+}
+
+// 下载付费墙总开关：只有服务端显式设置 PAYWALL_ENABLE=true 才拦截下载。
+// 读取失败或旧版本无该字段时按「关闭」处理，保证下载不被挡住。
+export async function isPaywallEnabled(): Promise<boolean> {
+    const cfg = await loadPaymentConfig();
+    return cfg.paywall === true;
 }
 
 function formatUsd(cents: number): string {
